@@ -1,0 +1,13 @@
+----------------------------------------------
+MyStack Setup and Testing
+----------------------------------------------
+
+1.	Create a MySQL database called [database]
+2.	In the /ormroot directory, edit build.properties and runtime-conf.xml with DB info
+3.	From the /ormroot directory, run go.sh to set up the database - there should be no errors
+4.  Mount a virtual host on /webroot and open in your browser
+		(i)		The top heading should say "Welcome to MyStack, Robin Arenson!" - indicating the DB works
+		(ii)	Click the first "Click me" link to test that the JS engine is working  with BUILD mode off (SOURCE mode on)
+		(iii)	Click the second "Click me" link to test that the Ajax engine is working with BUILD mode off (SOURCE mode on)
+		(iv)	Switch BUILD mode on by editing the value of JS_BUILD in /application/config/rconfig.php
+		(v)		Run tests (ii) and (iii) again to make sure the JS and Ajax engines work in BUILD mode

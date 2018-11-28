@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="utf-8"?>
+<database name="ormroot" defaultIdMethod="native">
+  <table name="captured_emails" phpName="CapturedEmail">
+	  <column name="email" type="VARCHAR" size="128" required="true" primaryKey="true" />
+	  <column name="first_name" type="VARCHAR" size="64" required="true" />
+	  <column name="last_name" type="VARCHAR" size="64" required="true" />
+    <column name="followup_sent_at" type="TIMESTAMP" required="false" />
+	  <behavior name="timestampable" />
+  </table>
+  <table name="cron_logs" phpName="CronLog">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="task" type="VARCHAR" size="50" required="true" />
+    <column name="is_success" type="TINYINT" required="true" defaultValue="1" />
+    <column name="error_code" type="VARCHAR" size="30" required="false" />
+    <column name="printout" type="LONGVARCHAR" required="true" />
+	  <behavior name="timestampable" />
+  </table>
+  <table name="deliveries" phpName="Delivery">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="delivery_site_id" type="INTEGER" size="10" required="true" />
+    <column name="delivery_date" type="DATE" required="true" />
+    <column name="delivery_day" type="VARCHAR" size="10" sqlType="ENUM('Mon','Tue','Wed','Thu','Fri','Sat','Sun')" required="true" />
+    <column name="delivered_by_driver_id" type="INTEGER" size="10" required="false" />
+    <column name="delivered_at" type="TIMESTAMP" required="false" />
+    <column name="status" type="VARCHAR" size="10" sqlType="ENUM('Pending','Delivered','Failed')" required="true" defaultValue="Pending" />
+    <column name="notes" type="LONGVARCHAR" required="false" />
+    <behavior name="timestampable" />
+    <column name="doorstep"  type="BOOLEAN" size="1" defaultValue="0"/>
+    <column name="user_id" type="INTEGER" size="10" required="false" />
+	  <foreign-key foreignTable="users" phpName="DeliveredByDriver">
+      <reference local="delivered_by_driver_id" foreign="id" />
+	  </foreign-key>
+	  <foreign-key foreignTable="delivery_sites">
+      <reference local="delivery_site_id" foreign="id"/>
+	  </foreign-key>
+  </table>
+  <table name="delivery_sites" phpName="DeliverySite">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="default_delivery_day" type="VARCHAR" size="10" sqlType="ENUM('Mon','Tue','Wed','Thu','Fri','Sat','Sun')" required="true" />
+    <column name="is_published" type="TINYINT" defaultValue="1" required="true" />
+    <column name="accepts_deliveries" type="TINYINT" defaultValue="1" required="true" />
+    <column name="access_code" type="VARCHAR" size="5" required="true" />
+    <column name="nickname" type="VARCHAR" size="100" required="true" />
+    <column name="address1" type="VARCHAR" size="100" required="true" />
+    <column name="address2" type="VARCHAR" size="100" required="false" />
+    <column name="city" type="VARCHAR" size="100" required="true" />
+    <column name="zip" type="INTEGER" size="10" required="true" />
+    <column name="state_id" type="INTEGER" size="10" required="false" />
+    <column name="country_id" type="INTEGER" size="10" required="true" />
+    <column name="notes" type="LONGVARCHAR" required="false" />
+    <validator column="access_code">
+      <rule
+        name="unique"
+        message="Access code must be unique." />
+    </validator>
+    <validator column="nickname">
+      <rule
+        name="required"
+        message="Nickname is required." />
+    </validator>
+    <validator column="nickname">
+      <rule
+        name="unique"
+        message="Nickname must be unique." />
+    </validator>
+    <validator column="address1">
+      <rule
+        name="required"
+        message="Address field is required." />
+    </validator>
+    <validator column="city">
+      <rule
+        name="required"
+        message="City is required." />
+    </validator>
+    <validator column="zip">
+      <rule
+        name="required"
+        message="Zip code is required." />
+    </validator>
+    <validator column="state_id">
+      <rule
+        name="required"
+        message="State is required." />
+    </validator>
+    <unique>
+      <unique-column name="access_code" />
+    </unique>
+    <unique>
+      <unique-column name="nickname" />
+    </unique>
+	  <foreign-key foreignTable="_states">
+      <reference local="state_id" foreign="id"/>
+	  </foreign-key>
+	  <foreign-key foreignTable="_countries">
+      <reference local="country_id" foreign="id"/>
+	  </foreign-key>
+  </table>
+  <table name="doorsteps" phpName="DoorStep">
+    <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="zip" type="VARCHAR"  required="true" />
+    <column name="defaultday" phpName="DefaultDay" required="true" />
+    <column name="state_id" type="INTEGER" size="10" required="true" />
+    <column name="is_published" type="TINYINT"  defaultValue="0" required="true"  />
+    <column name="accepts_deliveries" type="TINYINT" defaultValue="1" required="true" />
+    <behavior name="timestampable" />
+    <foreign-key foreignTable="_states">
+      <reference local="state_id" foreign="id"/>
+    </foreign-key>
+  </table>
+  <table name="discounts" phpName="Discount">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="code" type="VARCHAR" size="15" required="true" />
+    <column name="amount" type="DECIMAL" size="10" scale="2" required="true" />
+    <column name="orders_affected" type="INTEGER" size="10" required="true" />
+    <column name="is_published" type="TINYINT" required="true" defaultValue="1" />
+	  <behavior name="timestampable" />
+    <unique>
+      <unique-column name="code" />
+    </unique>
+    <validator column="code">
+      <rule
+        name="required"
+        message="Code is required." />
+      <rule
+        name="unique"
+        message="Code must be unique." />
+    </validator>
+    <validator column="amount">
+      <rule
+        name="minValue"
+        value="1.00"
+        message="Discount cannot be less than $1" />
+    </validator>
+    <validator column="orders_affected">
+      <rule
+        name="minValue"
+        value="1"
+        message="Orders affected cannot be less than 1" />
+    </validator>
+  </table>
+  <table name="hooks" phpName="Hook">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="type" type="VARCHAR" size="40" required="true" />
+    <column name="contents" type="LONGVARCHAR" required="true" />
+    <column name="regarding_payment_id" type="INTEGER" required="true" />
+    <column name="is_verified" type="TINYINT" required="true" defaultValue="0" />
+    <column name="status" type="VARCHAR" sqlType="ENUM('Logged','Stopped','Processed')" required="true" defaultValue="Logged" />
+    <column name="notes" type="LONGVARCHAR" required="false" />
+	  <behavior name="timestampable" />
+	  <foreign-key foreignTable="payments" phpName="RegardingPayment">
+      <reference local="regarding_payment_id" foreign="id"/>
+	  </foreign-key>
+  </table>
+  <!--
+      Order row is created 48 hours before midnight on delivery day
+  -->
+  <table name="orders" phpName="Order">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="subscription_id" type="INTEGER" size="10" required="true" />
+    <column name="user_bag_id" type="INTEGER" size="10" required="false" />
+    <column name="delivery_site_id" type="INTEGER" size="10" required="true" />
+
+
+    <!--
+      *Pending:         Order is due for delivery, driver has not marked it delivered yet
+      Skipped:          User has opted out for this week, 48 hours or more before midnight
+      Delivered:        Driver has marked the Order delivered
+      Donated:          User has marked the Order "Donate" and it is added to the "Donated" total, not included in driver's delivery list
+      Failed:           Driver marked the delivery 'Failed'
+    -->
+    <column name="status" type="VARCHAR" size="10" sqlType="ENUM('Pending','Skipped','Delivered','Donated','Failed')" required="true" defaultValue="Pending" />
+    <!-- This value is set when row is created -->
+    <column name="delivery_scheduled_for" type="DATE" required="true" />
+    <!-- These three values are stamped when the status changes -->
+    <column name="price" type="DECIMAL" size="10" scale="2" required="true" />
+    <column name="delivered_at" type="TIMESTAMP" required="false" />
+    <column name="skipped_at" type="TIMESTAMP" required="false" />
+    <column name="donated_at" type="TIMESTAMP" required="false" />
+    <column name="paid_at" type="TIMESTAMP" required="false" />
+    <column name="payment_id" type="INTEGER" size="10" required="false" />
+    <column name="delivery_id" type="INTEGER" size="10" required="false" />
+    <column name="discount_id" type="INTEGER" size="10" required="false" />
+    <column name="notes" type="LONGVARCHAR" required="false" />
+	  <behavior name="timestampable" />
+      <foreign-key foreignTable="user_bag">
+        <reference local="user_bag_id" foreign="id"/>
+      </foreign-key>
+	  <foreign-key foreignTable="deliveries">
+      <reference local="delivery_id" foreign="id"/>
+	  </foreign-key>
+	  <foreign-key foreignTable="delivery_sites">
+      <reference local="delivery_site_id" foreign="id"/>
+	  </foreign-key>
+	  <foreign-key foreignTable="payments">
+      <reference local="payment_id" foreign="id"/>
+	  </foreign-key>
+	  <foreign-key foreignTable="subscriptions">
+      <reference local="subscription_id" foreign="id"/>
+	  </foreign-key>
+	  <foreign-key foreignTable="discounts" phpName="DiscountApplied">
+      <reference local="discount_id" foreign="id"/>
+	  </foreign-key>
+  </table>
+  <table name="payments" phpName="Payment">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="user_id" type="INTEGER" size="10" required="true" />
+    <column name="status" type="VARCHAR" size="25" sqlType="ENUM('Succeeded','Failed','Unverified')" required="true" defaultValue="Unverified" />
+    <column name="stripe_customer_id" type="VARCHAR" size="30" required="true" />
+    <column name="stripe_card_id" type="VARCHAR" size="30" required="true" />
+    <column name="stripe_charge_id" type="VARCHAR" size="30" required="true" />
+    <column name="stripe_response" type="LONGVARCHAR" required="true" />
+    <column name="card_last_four" type="VARCHAR" size="30" required="true" />
+    <column name="card_type" type="VARCHAR" size="15" required="true" />
+    <column name="card_exp_month" type="INTEGER" size="30" required="true" />
+    <column name="card_exp_year" type="INTEGER" size="30" required="true" />
+    <column name="amount_paid" type="decimal" size="10" scale="2" required="true" />
+    <column name="tax"  type="DOUBLE" size="10" scale="2" required="true"/>
+    <column name="deliveryCharge"  type="DOUBLE" size="10" scale="2" required="true"/>
+    <behavior name="timestampable" />
+	  <foreign-key foreignTable="users">
+      <reference local="user_id" foreign="id"/>
+	  </foreign-key>
+  </table>
+  <table name="payment_errors" phpName="PaymentError">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="type" type="VARCHAR" size="40" required="true" />
+    <column name="contents" type="LONGVARCHAR" required="true" />
+    <column name="regarding_user_id" type="INTEGER" required="true" />
+    <column name="notes" type="LONGVARCHAR" required="false" />
+	  <behavior name="timestampable" />
+	  <foreign-key foreignTable="users" phpName="RegardingUser">
+      <reference local="regarding_user_id" foreign="id"/>
+	  </foreign-key>
+  </table>
+
+  <table name="product_categories" phpName="ProductCategory">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="is_published" type="TINYINT" defaultValue="1" required="true" />
+    <column name="title" type="VARCHAR" size="30" required="true" />
+    <column name="description" type="LONGVARCHAR" required="true" />
+    <column name="image" type="VARCHAR" size="100" required="true" />
+  </table>
+
+  <table name="products" phpName="Product">
+    <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="is_published" type="TINYINT" defaultValue="1" required="true" />
+    <column name="title" type="VARCHAR" size="50" required="true" />
+    <column name="category_id" type="INTEGER" size="10" required="true" />
+    <column name="size" type="VARCHAR" size="10" sqlType="ENUM('Small','Medium','Large')" required="true" />
+	<column name="price" type="DECIMAL" size="10" required="true" />
+    <column name="points" type="DECIMAL" size="10" required="true" />
+    <column name="description" type="LONGVARCHAR" required="true" />
+    <behavior name="timestampable" />
+
+    <validator column="size">
+      <rule
+              name="required"
+              message="Size is required." />
+    </validator>
+    <validator column="title">
+      <rule
+        name="required"
+        message="Title is required." />
+    </validator>
+    <validator column="category_id">
+      <rule
+              name="required"
+              message="Category is required." />
+    </validator>
+    <validator column="points">
+      <rule
+              name="required"
+              message="Point is required." />
+    </validator>
+    <validator column="price">
+      <rule
+              name="required"
+              message="Price is required." />
+    </validator>
+    <foreign-key foreignTable="product_categories">
+        <reference local="category_id" foreign="id"/>
+	  </foreign-key>
+  </table>
+
+  <table name="refunds" phpName="Refund">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="payment_id" type="INTEGER" size="10" required="true" />
+    <column name="stripe_txn_id" type="VARCHAR" size="35" required="true" />
+    <column name="amount" type="DECIMAL" size="10" scale="2" required="true" />
+	  <foreign-key foreignTable="payments">
+      <reference local="payment_id" foreign="id"/>
+	  </foreign-key>
+	  <behavior name="timestampable" />
+  </table>
+	<table name="subscriptions" phpName="Subscription">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="user_id" type="INTEGER" size="10" required="true" />
+    <column name="delivery_site_id" type="INTEGER" size="10" required="false" />
+    <column name="default_product_id" type="INTEGER" size="10" required="true" />
+    <column name="product_id" type="INTEGER" size="10" required="true" />
+    <!--
+      Active:         Subscription has address, is being charged
+      *Paused:         User has unconfirmed account; no charges until user confirms email
+      Pending:        Subscription has no address attached, no charges until admin takes action
+      Canceled:       Subscription maintains old address for archive, no charges ever again
+      Suspended:      Payment has recently failed
+    -->
+    <column name="status" type="VARCHAR" size="20" sqlType="ENUM('Active','Paused','Pending','Canceled','Suspended')" required="true" defaultValue="Paused" />
+    <column name="delivery_day" type="VARCHAR" size="10" sqlType="ENUM('Mon','Tue','Wed','Thu','Fri','Sat','Sun')" required="true" />
+    <column name="price_paid" type="DECIMAL" size="10" scale="2" required="true" />
+    <column name="canceled_at" type="TIMESTAMP" required="false" />
+	  <behavior name="timestampable" />
+	  <foreign-key foreignTable="users">
+      <reference local="user_id" foreign="id"/>
+	  </foreign-key>
+	  <foreign-key foreignTable="delivery_sites">
+      <reference local="delivery_site_id" foreign="id"/>
+	  </foreign-key>
+	  <foreign-key foreignTable="products">
+      <reference local="product_id" foreign="id"/>
+	  </foreign-key>
+  </table>
+
+	<table name="users" phpName="User">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="admin_access" type="VARCHAR" size="30" sqlType="ENUM('SuperAdmin','Driver')" required="false" />
+      <column name="doorstep"  type="BOOLEAN" size="1" defaultValue="0"/>
+    <!-- This is optional because administrators don't have it -->
+    <column name="stripe_id" type="VARCHAR" size="40" required="false" />
+    <!--
+      *Active:         User can log in, subscriptions all have addresses, CC is being charged
+      AddressPending: User can log in, subscriptions have NO addreses, admin needs to take action
+      Deferred:       Admin has said NO to address, customer lead is maintained, login is possible
+      Suspended:      Either through admin action or user account deletion, no login is possible, all subscriptions canceled
+    -->
+    <column name="customer_status" type="VARCHAR" size="30" sqlType="ENUM('Active','AddressPending','Deferred','Suspended')" required="true" defaultValue="Active" />
+    <column name="is_confirmed" type="TINYINT" size="1" required="true" defaultValue="0" />
+    <column name="is_archived" type="TINYINT" size="1" required="true" defaultValue="0" />
+	  <column name="first_name" type="VARCHAR" size="64" required="true" />
+	  <column name="last_name" type="VARCHAR" size="64" required="true" />
+	  <column name="email" type="VARCHAR" size="128" required="true" />
+    <column name="phone" type="VARCHAR" size="20" required="true" />
+    <column name="address1" type="VARCHAR" size="100" required="true" />
+    <column name="address2" type="VARCHAR" size="100" required="false" />
+    <column name="city" type="VARCHAR" size="100" required="true" />
+    <column name="zip" type="INTEGER" size="10" required="true" />
+    <column name="state_id" type="INTEGER" size="10" required="false" />
+    <column name="country_id" type="INTEGER" size="10" required="true" defaultValue="1" />
+    <column name="default_delivery_site_id" type="INTEGER" size="10" required="false" />
+	  <column name="password" type="VARCHAR" size="128" required="false" />
+	  <column name="hash" type="VARCHAR" size="15" required="false" />
+    <column name="delivery_site_notes" type="LONGVARCHAR" required="false" />
+    <column name="dietary_restrictions" type="LONGVARCHAR" required="false" />
+    <column name="c_phone" phpName="Mobile" type="VARCHAR" size="20" required="true" />
+      <column name="alt_c_phone" phpName="AMobile" type="VARCHAR" size="20" required="true" />
+      <column name="single_family_home"  type="BOOLEAN" size="1" defaultValue="0" />
+      <column name="office_building"  type="BOOLEAN" size="1" defaultValue="0" />
+      <column name="town_house"  type="BOOLEAN" size="1" defaultValue="0" />
+      <column name="apartment_condo"  type="BOOLEAN" size="1" defaultValue="0" />
+      <column name="concierge"  type="BOOLEAN" size="1" defaultValue="0"  />
+      <column name="concierge_number"  type="VARCHAR" size="100"  />
+      <column name="key_fob"  type="BOOLEAN" size="1" defaultValue="0"  />
+      <column name="parking"  type="VARCHAR" size="300"  />
+	  <behavior name="timestampable" />
+
+    <validator column="email">
+      <rule
+        name="unique"
+        message="This email is in use. Please choose another." />
+    </validator>
+    <validator column="email">
+      <rule
+        name="match"
+        value="/^([a-zA-Z0-9])+([\.a-zA-Z0-9_-])*@([a-zA-Z0-9])+(\.[a-zA-Z0-9_-]+)+$/"
+        message="Please enter a valid email address." />
+    </validator>
+    <validator column="first_name">
+      <rule
+        name="required"
+        message="First name is required." />
+    </validator>
+    <validator column="last_name">
+      <rule
+        name="required"
+        message="Last name is required." />
+    </validator>
+    <unique>
+      <unique-column name="email" />
+    </unique>
+	  <foreign-key foreignTable="_states" phpName="State">
+      <reference local="state_id" foreign="id"/>
+	  </foreign-key>
+	  <foreign-key foreignTable="_countries" phpName="Country">
+      <reference local="country_id" foreign="id"/>
+	  </foreign-key>
+	  <foreign-key foreignTable="delivery_sites" phpName="DefaultDeliverySite">
+      <reference local="default_delivery_site_id" foreign="id"/>
+	  </foreign-key>
+	</table>
+
+  <table name="x_discounts_users" phpName="XDiscountsUsers" isCrossRef="true">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="discount_id" type="INTEGER" size="10" required="true" />
+    <column name="user_id" type="INTEGER" size="10" required="true" />
+	  <behavior name="timestampable" />
+	  <foreign-key foreignTable="discounts">
+      <reference local="discount_id" foreign="id"/>
+	  </foreign-key>
+	  <foreign-key foreignTable="users">
+      <reference local="user_id" foreign="id"/>
+	  </foreign-key>
+  </table>
+  <table name="_countries" phpName="Country">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="code" type="VARCHAR" size="3" required="true" />
+    <column name="name" type="VARCHAR" size="100" required="true" />
+  </table>
+  <table name="_states" phpName="State">
+	  <column name="id" phpName="Id" type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="code" type="VARCHAR" size="2" required="true" />
+    <column name="name" type="VARCHAR" size="40" required="true" />
+	<column name="tax" phpName="Tax" type="DOUBLE" size="10" scale="2" required="true"/>  </table>
+
+  <table name="suppliers" >
+      <column name="id"  type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+      <column name="name" type="VARCHAR" size="100" required="true" />
+      <column name="active"  type="BOOLEAN" size="1" defaultValue="1"/>
+      <column name="description" type="VARCHAR" size="200" />
+      <behavior name="timestampable" />
+    <validator column="name">
+      <rule
+          name="required"
+          message="Name is required." />
+    </validator>
+  </table>
+
+
+  <table name="items" >
+    <column name="id"  type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="name" type="VARCHAR" size="100" required="true" />
+    <column name="description" type="VARCHAR" size="500" />
+    <column name="category_id"  type="INTEGER" size="11" required="true" />
+    <column name="active"  type="BOOLEAN" size="1" defaultValue="1"/>
+    <column name="secondary"  type="BOOLEAN" size="1" defaultValue="0"/>
+    <behavior name="timestampable" />
+    <behavior name="archivable" />
+    <foreign-key foreignTable="product_categories">
+      <reference local="category_id" foreign="id"/>
+    </foreign-key>
+
+    <validator column="name">
+      <rule
+              name="required"
+              message="Name is required." />
+    </validator>
+    <validator column="category_id">
+      <rule
+              name="required"
+              message="Category Not mentioned." />
+    </validator>
+
+  </table>
+
+  <table name="item_supplier" isCrossRef="true">
+    <column name="supplier_id" type="INTEGER"  primaryKey="true" />
+    <column name="item_id" type="INTEGER"  primaryKey="true" />
+    <behavior name="timestampable" />
+    <foreign-key foreignTable="suppliers">
+      <reference local="supplier_id" foreign="id"/>
+    </foreign-key>
+    <foreign-key foreignTable="items">
+      <reference local="item_id" foreign="id"/>
+    </foreign-key>
+  </table>
+
+  <table name="items_point"  >
+    <column name="id"  type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="item_id" type="INTEGER" />
+    <column name="product_id" type="INTEGER" />
+    <column name="points" type="INTEGER" />
+    <behavior name="timestampable" />
+
+    <foreign-key foreignTable="items">
+      <reference local="item_id" foreign="id"/>
+    </foreign-key>
+    <foreign-key foreignTable="products">
+      <reference local="product_id" foreign="id"/>
+    </foreign-key>
+  </table>
+
+  <table name="points_version" >
+    <column name="id"  type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="point_id" type="INTEGER" />
+    <column name="points" type="INTEGER" />
+    <behavior name="timestampable" />
+    <foreign-key foreignTable="items_point">
+      <reference local="point_id" foreign="id"/>
+    </foreign-key>
+  </table>
+
+  <table name="bags" >
+    <column name="id"  type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="date" type="DATE" required="true" />
+    <column name="product_id" type="INTEGER" />
+    <column name="locked"  type="BOOLEAN" size="1" defaultValue="0"/>
+    <column name="is_published"  type="BOOLEAN" size="1" defaultValue="0"/>
+    <column name="sync"  type="BOOLEAN" size="1" defaultValue="0"/>
+    <column name="f_email"  type="BOOLEAN" size="1" defaultValue="0"/>
+    <column name="total_points"  type="VARCHAR" size="100" defaultValue="0"/>
+    <column name="s_email"  type="BOOLEAN" size="1" defaultValue="0"/>
+    <behavior name="timestampable" />
+
+    <foreign-key foreignTable="products">
+      <reference local="product_id" foreign="id"/>
+    </foreign-key>
+  </table>
+
+
+  <table name="bags_item" >
+    <column name="id"  type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="bag_id" type="INTEGER" required="true" />
+    <column name="point_id" type="INTEGER" required="true" />
+    <column name="points" type="INTEGER" />
+    <column name="status"  type="VARCHAR" size="10" sqlType="ENUM('Secondary', 'Primary')" required="true"/>
+    <behavior name="timestampable" />
+
+    <foreign-key foreignTable="items_point">
+      <reference local="point_id" foreign="id"/>
+    </foreign-key>
+
+    <foreign-key foreignTable="bags">
+      <reference local="bag_id" foreign="id"/>
+    </foreign-key>
+  </table>
+
+
+  <table name="user_bag" phpName="UserBag">
+    <column name="id"  type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="user_id" type="INTEGER" />
+    <column name="total_points"  type="VARCHAR" size="100" defaultValue="0"/>
+    <column name="subscription_id" type="INTEGER" />
+    <column name="date" type="DATE" required="true" />
+    <column name="product_id" type="INTEGER" />
+    <column name="is_changed"  type="BOOLEAN" size="1" defaultValue="0"/>
+    <column name="status"  type="VARCHAR" size="10" defaultValue="Pending" sqlType="ENUM('Pending', 'Delivered')" required="true"/>
+
+    <behavior name="timestampable" />
+
+    <foreign-key foreignTable="subscriptions">
+      <reference local="subscription_id" foreign="id"/>
+    </foreign-key>
+
+    <foreign-key foreignTable="products">
+      <reference local="product_id" foreign="id"/>
+    </foreign-key>
+  </table>
+
+
+  <table name="user_bag_item"  >
+    <column name="id"  type="INTEGER" size="10" primaryKey="true" autoIncrement="true" />
+    <column name="bag_id" type="INTEGER" required="true" />
+    <column name="point_id" type="INTEGER" required="true" />
+    <column name="points" type="INTEGER" />
+    <column name="secondary"  type="BOOLEAN" size="1" defaultValue="0"/>
+    <column name="locked"  type="BOOLEAN" size="1" defaultValue="0"/>
+    <column name="is_deleted"  type="BOOLEAN" size="1" defaultValue="0"/>
+    <column name="version"  type="INTEGER" size="10" defaultValue="0"/>
+    <behavior name="timestampable" />
+    <behavior name="archivable" />
+    <column name="status" type="VARCHAR" size="10" sqlType="ENUM('Active','Secondary','Deleted')" required="true" />
+    <column name="quantity" type="INTEGER" defaultValue="1"/>
+   <foreign-key foreignTable="user_bag">
+      <reference local="bag_id" foreign="id"/>
+    </foreign-key>
+    <foreign-key foreignTable="items_point">
+      <reference local="point_id" foreign="id"/>
+    </foreign-key>
+  </table>
+
+</database>

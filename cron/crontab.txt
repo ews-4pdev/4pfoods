@@ -1,0 +1,17 @@
+#   Create order objects for all subscriptions with delivery day 2 days from now
+1	0	*	*	*	php /var/www/vhosts/xwxy-z7jx.accessdomain.com/_production/codebase/cron/cron.php createOrders
+
+#   Create delivery object symbolizing drop-off, for use by drivers
+5 0	*	*	*	php /var/www/vhosts/xwxy-z7jx.accessdomain.com/_production/codebase/cron/cron.php createDeliveries
+
+#   Send a reminder to every customer that their order will be delivered tomorrow
+0	12	*	*	*	php /var/www/vhosts/xwxy-z7jx.accessdomain.com/_production/codebase/cron/cron.php sendDeliveryReminders
+
+#   Send an email to any customer who abandoned the signup form 48 hours ago
+0	12	*	*	*	php /var/www/vhosts/xwxy-z7jx.accessdomain.com/_production/codebase/cron/cron.php sendCartAbandonmentEmails
+
+#   Create a database capture file and upload to Amazon S3
+0 */6 *	*	*	php /var/www/vhosts/xwxy-z7jx.accessdomain.com/_production/codebase/cron/cron.php backupDatabase
+
+#   On the first of the month, charge customers for orders processed in previous month
+6	0	1	*	*	php /var/www/vhosts/xwxy-z7jx.accessdomain.com/_production/codebase/cron/cron.php executeCharges

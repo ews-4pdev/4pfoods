@@ -1,0 +1,9 @@
+<?php
+
+$_TASK = array(
+	[data]
+);
+
+$_POST['task'] = $_TASK[$_POST['[hash]']];
+
+?>
